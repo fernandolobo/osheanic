@@ -128,6 +128,7 @@ class PessoaFisica(Pessoa):
     data_emissao_rg = models.DateField(verbose_name=_(u'data de emissão RG'), null=True, blank=True)
     data_nascimento = models.DateField(verbose_name=_('data de nascimento'), null=True, blank=True)
     sexo = models.CharField(max_length=1, verbose_name=_('sexo'), choices=gender_list, null=True, blank=True)
+    profissao = models.CharField(max_length=150, verbose_name=_(u'profissão'), null=True, blank=True)
     Pessoa.tipo = 'F'
 
     class Meta:
@@ -187,6 +188,14 @@ class Cliente(PessoaFisica):
 
 class GrupoQuarto(models.Model):
     nome = models.CharField(max_length=150, verbose_name=_('nome'))
+
+    class Meta:
+        ordering = ["nome"]
+        verbose_name = u"Grupo de Quarto"
+        verbose_name_plural = u"Grupos de Quartos"
+
+    def __unicode__(self):
+        return self.nome
 
 
 class Quarto(models.Model):
