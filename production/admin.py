@@ -35,6 +35,7 @@ class EnderecoInline(admin.StackedInline):
 
 class ClienteAdmin(admin.ModelAdmin):
     fieldsets = ((None, {'fields': (('nome', 'sobrenome', 'sannyas'),
+                                    ('profissao'),
                                     ('telefone'),
                                     ('email', 'site'),
                                     ('rg', 'orgao_rg', 'data_emissao_rg'),
