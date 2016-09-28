@@ -5,7 +5,8 @@ from django.db import models
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
 from django.utils.formats import number_format
-from applib.lists import gender_list, status_room, type_person
+from django.utils import timezone
+from applib.lists import gender_list, status_room, status_res, type_person
 
 
 class TimeStampedModel(models.Model):
@@ -204,12 +205,53 @@ class Quarto(models.Model):
     capacidade = models.IntegerField(verbose_name=_('capacidade'))
     status = models.CharField(max_length=1, verbose_name=_(u'situação'), choices=status_room, default='L')
     grupoquarto = models.ForeignKey('GrupoQuarto', verbose_name=_('grupo de quarto'))
+    preco = models.DecimalField(verbose_name=_(u'preço'), max_digits=10, decimal_places=2)
 
     class Meta:
         ordering = ["nome", "grupoquarto"]
 
     def __unicode__(self):
         return self.nome
+
+    @staticmethod
+    def lista_quartos():
+        todosquartos = Quarto.objects.all().order_by('codigo')
+        lista = []
+        for q in todosquartos:
+            lista.append((str(q.codigo), str(q.codigo)))
+        return lista
+
+    def ativo(self):
+        tadasreservas = Reserva.objects.filter(quarto=self).order_by('criado').reverse()
+        for res in tadasreservas:
+            if res.status == "ENT":
+                return res
+        return None
+
+    def ocupado(self):
+        if self.ativo():
+            return True
+        return False
+
+    def lotado(self):
+        res = self.ativo()
+        now = timezone.now()
+        if res:
+            if res.reserva_ate < now:
+                return True
+            return False
+        return False
+
+    def ultimodia(self):
+        res = self.ativo()
+        now = timezone.now()
+        if res:
+            if not self.lotado():
+                if res.reserva_ate.date() == now.date():
+                    return True
+                return False
+            return False
+        return False
 
 
 class Salao(models.Model):
@@ -231,7 +273,7 @@ class Terapeuta(PessoaFisica):
 
 class Grupo(TimeStampedModel):
     nome = models.CharField(max_length=150, verbose_name=_('nome'))
-    vagas = models.IntegerField(verbose_name=_('vagas'))
+    vagas = models.PositiveIntegerField(verbose_name=_('vagas'))
     data_inicio = models.DateTimeField(verbose_name=_(u'data de início'))
     data_fim = models.DateTimeField(verbose_name=_('data de término'))
     valor_inscricao = models.DecimalField(verbose_name=_(u'valor de inscrição'), max_digits=10, decimal_places=2)
@@ -252,3 +294,22 @@ class Grupo(TimeStampedModel):
 
     def __unicode__(self):
         return self.nome
+
+
+class Reserva(models.Model):
+    cliente = models.ForeignKey(u'Cliente', verbose_name=(u'cliente'))
+    quarto = models.ForeignKey(u'Quarto', verbose_name=(u'quarto'))
+    criado = models.DateTimeField()
+    reserva_de = models.DateTimeField(null=True, blank=True)
+    reserva_ate = models.DateTimeField(null=True, blank=True)
+    entrada = models.DateTimeField(null=True, blank=True)
+    saida = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=20,choices=status_res)
+    def get_status(self):
+        for index, item in enumerate(status_res):
+            if item[0] == self.status:
+                return item[1]
+    def get_formated_date_from(self):
+        return self.reserva_de.strftime("%d.%m.%Y")
+    def get_formated_date_until(self):
+        return self.reserva_ate.strftime("%d.%m.%Y")

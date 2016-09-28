@@ -12,6 +12,13 @@ status_room = (
     ('P', 'Parcialmente Ocupado')
 )
 
+status_res = (
+    ('RES', 'Reservado'),
+    ('ENT', 'Entrada'),
+    ('SAI', u'Saída'),
+    ('FEC', 'Fechado')
+)
+
 treatment_list = (
     ('a', 'Arq.'),
     ('aa', 'Arqa.'),
