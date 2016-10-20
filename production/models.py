@@ -213,46 +213,6 @@ class Quarto(models.Model):
     def __unicode__(self):
         return self.nome
 
-    @staticmethod
-    def lista_quartos():
-        todosquartos = Quarto.objects.all().order_by('codigo')
-        lista = []
-        for q in todosquartos:
-            lista.append((str(q.codigo), str(q.codigo)))
-        return lista
-
-    def ativo(self):
-        tadasreservas = Reserva.objects.filter(quarto=self).order_by('criado').reverse()
-        for res in tadasreservas:
-            if res.status == "ENT":
-                return res
-        return None
-
-    def ocupado(self):
-        if self.ativo():
-            return True
-        return False
-
-    def lotado(self):
-        res = self.ativo()
-        now = timezone.now()
-        if res:
-            if res.reserva_ate < now:
-                return True
-            return False
-        return False
-
-    def ultimodia(self):
-        res = self.ativo()
-        now = timezone.now()
-        if res:
-            if not self.lotado():
-                if res.reserva_ate.date() == now.date():
-                    return True
-                return False
-            return False
-        return False
-
 
 class Salao(models.Model):
     nome = models.CharField(max_length=150, verbose_name=_('nome'))
@@ -305,11 +265,4 @@ class Reserva(models.Model):
     entrada = models.DateTimeField(null=True, blank=True)
     saida = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=20,choices=status_res)
-    def get_status(self):
-        for index, item in enumerate(status_res):
-            if item[0] == self.status:
-                return item[1]
-    def get_formated_date_from(self):
-        return self.reserva_de.strftime("%d.%m.%Y")
-    def get_formated_date_until(self):
-        return self.reserva_ate.strftime("%d.%m.%Y")
+
